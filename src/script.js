@@ -15,6 +15,15 @@ let drawing = false;
 let color = "#000000";
 let prevX = 0, prevY = 0;
 
+// Get the correct cursor position relative to the canvas
+function getCursorPosition(e) {
+    const rect = canvas.getBoundingClientRect(); // Get canvas position
+    return {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+    };
+}
+
 // Color picker event
 document.getElementById("colorPicker").addEventListener("change", (e) => {
     color = e.target.value;
@@ -23,15 +32,15 @@ document.getElementById("colorPicker").addEventListener("change", (e) => {
 // Mouse event listeners
 canvas.addEventListener("mousedown", (e) => {
     drawing = true;
-    prevX = e.clientX - canvas.offsetLeft;
-    prevY = e.clientY - canvas.offsetTop;
+    const { x, y } = getCursorPosition(e);
+    prevX = x;
+    prevY = y;
 });
 
 canvas.addEventListener("mousemove", (e) => {
     if (!drawing) return;
 
-    const x = e.clientX - canvas.offsetLeft;
-    const y = e.clientY - canvas.offsetTop;
+    const { x, y } = getCursorPosition(e);
 
     // Emit draw event to server instead of drawing directly
     socket.emit("draw", { x, y, prevX, prevY, color });
@@ -44,7 +53,7 @@ canvas.addEventListener("mouseup", () => {
     drawing = false;
 });
 
-// Only draw when server confirms the action
+// ✅ Only draw when server confirms the action
 socket.on("draw", ({ x, y, prevX, prevY, color }) => {
     ctx.strokeStyle = color;
     ctx.lineWidth = 3;
