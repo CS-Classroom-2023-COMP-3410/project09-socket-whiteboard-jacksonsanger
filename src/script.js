@@ -13,6 +13,7 @@ canvas.height = window.innerHeight - 100;
 // Set default drawing settings
 let drawing = false;
 let color = "#000000";
+let brushSize = 3; // Default brush size
 let prevX = 0, prevY = 0;
 
 // Get the correct cursor position relative to the canvas
@@ -24,9 +25,15 @@ function getCursorPosition(e) {
     };
 }
 
-// Color picker event
+// Update color when selected
 document.getElementById("colorPicker").addEventListener("change", (e) => {
     color = e.target.value;
+});
+
+// Update brush size when slider changes
+document.getElementById("brushSize").addEventListener("input", (e) => {
+    brushSize = e.target.value;
+    document.getElementById("brushSizeDisplay").innerText = brushSize;
 });
 
 // Mouse event listeners
@@ -42,8 +49,8 @@ canvas.addEventListener("mousemove", (e) => {
 
     const { x, y } = getCursorPosition(e);
 
-    // Emit draw event to server instead of drawing directly
-    socket.emit("draw", { x, y, prevX, prevY, color });
+    // Emit draw event with brush size
+    socket.emit("draw", { x, y, prevX, prevY, color, brushSize });
 
     prevX = x;
     prevY = y;
@@ -53,10 +60,10 @@ canvas.addEventListener("mouseup", () => {
     drawing = false;
 });
 
-// ✅ Only draw when server confirms the action
-socket.on("draw", ({ x, y, prevX, prevY, color }) => {
+// ONLY actually draw when the server sends a draw event
+socket.on("draw", ({ x, y, prevX, prevY, color, brushSize }) => {
     ctx.strokeStyle = color;
-    ctx.lineWidth = 3;
+    ctx.lineWidth = brushSize;
     ctx.lineCap = "round";
     ctx.beginPath();
     ctx.moveTo(prevX, prevY);
@@ -76,8 +83,9 @@ socket.on("clearBoard", () => {
 
 // Load board state for new users
 socket.on("loadBoard", (boardState) => {
-    boardState.forEach(({ x, y, prevX, prevY, color }) => {
+    boardState.forEach(({ x, y, prevX, prevY, color, brushSize }) => {
         ctx.strokeStyle = color;
+        ctx.lineWidth = brushSize;
         ctx.beginPath();
         ctx.moveTo(prevX, prevY);
         ctx.lineTo(x, y);

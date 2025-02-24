@@ -20,7 +20,7 @@ io.on("connection", (socket) => {
     socket.on("draw", (data) => {
         boardState.push(data); // Store drawing action
 
-        // ✅ Broadcast drawing action to ALL clients, including the sender
+        // Confirm the action then send new data (new strokes)
         io.emit("draw", data);
     });
 
